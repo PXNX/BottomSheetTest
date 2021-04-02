@@ -1,0 +1,105 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        applicationId = "pxnx.BottomSheetTest"
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 1
+        versionName "TEST"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            //     shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+        kotlinOptions {
+            jvmTarget = "1.8"
+            freeCompilerArgs += ["-Xallow-jvm-ir-dependencies",
+                                 "-Xallow-unstable-dependencies",
+                                 "-P",
+                                 "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"]
+            //  freeCompilerArgs += ["-Xskip-prerelease-check"]
+            //   freeCompilerArgs += ["-Xallow-unstable-dependencies"]
+
+            kotlinOptions.useIR = true
+        }
+    }
+
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+      //  kotlinCompilerVersion "1.4.30"
+        kotlinCompilerExtensionVersion "1.0.0-beta01"
+    }
+
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.3.2'
+    implementation 'androidx.appcompat:appcompat:1.3.0-rc01'
+    implementation 'com.google.android.material:material:1.3.0'
+
+    implementation 'androidx.activity:activity-compose:1.3.0-alpha05'
+
+    implementation 'androidx.compose.ui:ui:1.0.0-beta03'
+
+    // Foundation (Border, Background, Box, Image, Scroll, shapes, animations, etc.)
+    implementation 'androidx.compose.foundation:foundation:1.0.0-beta03'
+    // Material Design
+    implementation 'androidx.compose.material:material:1.0.0-beta03'
+    // Material design icons
+    implementation 'androidx.compose.material:material-icons-core:1.0.0-beta03'
+    implementation 'androidx.compose.material:material-icons-extended:1.0.0-beta03'
+    // Integration with observables
+    implementation 'androidx.compose.runtime:runtime-livedata:1.0.0-beta03'
+
+    // Paging Compose
+//    implementation "androidx.paging:paging-compose:1.0.0-alpha08"
+
+////// needed?
+    implementation 'androidx.compose.compiler:compiler:1.0.0-beta03'
+
+    //useful?
+    implementation 'androidx.compose.foundation:foundation-layout:1.0.0-beta03'
+
+
+    // implementation "androidx.navigation:navigation-compose:1.0.0-alpha05"
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.4'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.4'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.3.5'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.2'
+
+
+    implementation "androidx.fragment:fragment-ktx:1.3.2"
+
+    /////  implementation "androidx.fragment:fragment-ktx:1.4.0-SNAPSHOT"
+
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.3.1'
+
+    //implementation "androidx.datastore:datastore-preferences:1.0.0-alpha07"
+
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.3.4'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.3.4'
+}
