@@ -1,12 +1,19 @@
 package pxnx.BottomSheetTest
 
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.TweenSpec
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -14,6 +21,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
@@ -21,9 +29,68 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
-enum class BottomSheetValue { SHOWING, HIDDEN }
+@ExperimentalMaterialApi
+enum class ModalBottomSheetValue { Hidden, Shown }
+
+@ExperimentalMaterialApi
+class ModalBottomSheetState(
+    initialValue: ModalBottomSheetValue,
+    animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
+    confirmStateChange: (ModalBottomSheetValue) -> Boolean = { true }
+) : SwipeableState<ModalBottomSheetValue>(
+    initialValue = initialValue,
+    animationSpec = animationSpec,
+    confirmStateChange = confirmStateChange
+) {
+    val isVisible: Boolean
+        get() = currentValue != ModalBottomSheetValue.Hidden
+
+    suspend fun show() = animateTo(ModalBottomSheetValue.Shown)
+
+    suspend fun hide() = animateTo(ModalBottomSheetValue.Hidden)
+
+    internal val nestedScrollConnection = this.PreUpPostDownNestedScrollConnection
+
+    companion object {
+        fun Saver(
+            animationSpec: AnimationSpec<Float>,
+            confirmStateChange: (ModalBottomSheetValue) -> Boolean
+        ): Saver<ModalBottomSheetState, *> = Saver(
+            save = { it.currentValue },
+            restore = {
+                ModalBottomSheetState(
+                    initialValue = it,
+                    animationSpec = animationSpec,
+                    confirmStateChange = confirmStateChange
+                )
+            }
+        )
+    }
+}
+
+@Composable
+@ExperimentalMaterialApi
+fun rememberModalBottomSheetState(
+    initialValue: ModalBottomSheetValue,
+    animationSpec: AnimationSpec<Float> = SwipeableDefaults.AnimationSpec,
+    confirmStateChange: (ModalBottomSheetValue) -> Boolean = { true }
+): ModalBottomSheetState {
+    return rememberSaveable(
+        saver = ModalBottomSheetState.Saver(
+            animationSpec = animationSpec,
+            confirmStateChange = confirmStateChange
+        )
+    ) {
+        ModalBottomSheetState(
+            initialValue = initialValue,
+            animationSpec = animationSpec,
+            confirmStateChange = confirmStateChange
+        )
+    }
+}
 
 @ExperimentalMaterialApi
 @Composable
@@ -31,17 +98,22 @@ fun BottomSheet(
     parentHeight: Int,
     topOffset: Dp = 0.dp,
     fillMaxHeight: Boolean = false,
-    sheetState: SwipeableState<BottomSheetValue>,
+    sheetState: ModalBottomSheetState =
+        rememberModalBottomSheetState(ModalBottomSheetValue.Hidden),
     shape: Shape = RoundedCornerShape(8.dp),
     backgroundColor: Color = MaterialTheme.colors.background,
     contentColor: Color = contentColorFor(backgroundColor),
     elevation: Dp = 0.dp,
+    scrimColor: Color = ModalBottomSheetDefaults.scrimColor,
     content: @Composable () -> Unit
 ) {
     val topOffsetPx = with(LocalDensity.current) { topOffset.roundToPx() }
+
     var bottomSheetHeight = remember {  mutableStateOf(parentHeight.toFloat())}
 
     val scrollConnection = sheetState.PreUpPostDownNestedScrollConnection
+
+    val scope = rememberCoroutineScope()
 
     BottomSheetLayout(
         maxHeight = parentHeight - topOffsetPx,
@@ -50,8 +122,8 @@ fun BottomSheet(
         val swipeable = Modifier.swipeable(
             state = sheetState,
             anchors = mapOf(
-                parentHeight.toFloat() to BottomSheetValue.HIDDEN,
-                parentHeight - bottomSheetHeight.value to BottomSheetValue.SHOWING
+                parentHeight.toFloat() to ModalBottomSheetValue.Hidden,
+                parentHeight - bottomSheetHeight.value to ModalBottomSheetValue.Shown
             ),
             orientation = Orientation.Vertical,
             resistance = null
@@ -70,7 +142,17 @@ fun BottomSheet(
                     bottomSheetHeight.value = it.size.height.toFloat()
                 },
         ) {
-            content()
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .then(swipeable)) {
+                content()
+                Scrim(
+                    color = scrimColor,
+                    onDismiss = { scope.launch { sheetState.hide() } },
+                    visible = sheetState.targetValue != ModalBottomSheetValue.Hidden
+                )
+            }
         }
     }
 }
@@ -97,6 +179,70 @@ private fun BottomSheetLayout(
         }
     }
 }
+
+
+
+
+
+
+
+@Composable
+private fun Scrim(
+    color: Color,
+    onDismiss: () -> Unit,
+    visible: Boolean
+) {
+    if (color != Color.Transparent) {
+        val alpha by animateFloatAsState(
+            targetValue = if (visible) 1f else 0f,
+            animationSpec = TweenSpec()
+        )
+        val dismissModifier = if (visible) {
+            Modifier.pointerInput(onDismiss) { detectTapGestures { onDismiss() } }
+        } else {
+            Modifier
+        }
+
+        Canvas(
+            Modifier
+                .fillMaxSize()
+                .then(dismissModifier)
+        ) {
+            drawRect(color = color, alpha = alpha)
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

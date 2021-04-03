@@ -1,22 +1,25 @@
 package pxnx.BottomSheetTest
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment.Companion.End
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Yellow
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import pxnx.BottomSheetTest.ModalBottomSheetLayout
 import pxnx.BottomSheetTest.ui.theme.BottomSheetTestTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,8 +32,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             BottomSheetTestTheme {
 
+                /*
                 //requires two clicks
-                /*    val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+                 val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
                     val scope = rememberCoroutineScope()
 
                     val (bottomSheet, changeBottomSheet) = remember(calculation = { mutableStateOf(0) })
@@ -46,7 +50,7 @@ class MainActivity : ComponentActivity() {
                     ModalBottomSheetLayout(
                         sheetState = state,
                         sheetShape = RoundedCornerShape(6.dp, 6.dp, 0.dp, 0.dp),
-                        sheetBackgroundColor = LightGray,
+                        sheetBackgroundColor = Yellow,
                         sheetContent =
                         {
                             Log.w(TAG, "run sheet content ----- 1")
@@ -143,6 +147,8 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+
+
 
                  */
 
@@ -408,7 +414,8 @@ class MainActivity : ComponentActivity() {
                        }*/
 
 //works, but looks kinda ugly^^
-                /*       val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+                /*
+                    val state = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
                        val scope = rememberCoroutineScope()
 
                        val (bottomSheet, changeBottomSheet) = remember(calculation = { mutableStateOf(0) })
@@ -428,7 +435,7 @@ class MainActivity : ComponentActivity() {
                        ModalBottomSheetLayout(
                            sheetState = state,
                            sheetShape = RoundedCornerShape(6.dp, 6.dp, 0.dp, 0.dp),
-                           sheetBackgroundColor = LightGray,
+                           sheetBackgroundColor = Yellow,
                            sheetContent =
                            {
                                Log.w(TAG, "run sheet content ----- 1")
@@ -467,7 +474,7 @@ class MainActivity : ComponentActivity() {
                            ModalBottomSheetLayout(
                                sheetState = state2,
                                sheetShape = RoundedCornerShape(6.dp, 6.dp, 0.dp, 0.dp),
-                               sheetBackgroundColor = LightGray,
+                               sheetBackgroundColor = Yellow,
                                sheetContent =
                                {
                                    Log.w(TAG, "run sheet content ----- 1")
@@ -562,11 +569,11 @@ class MainActivity : ComponentActivity() {
 
                        }
 
+
                  */
 
 
-                val state: SwipeableState<BottomSheetValue> =
-                    rememberSwipeableState(initialValue = BottomSheetValue.HIDDEN)
+                val state: ModalBottomSheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
                 val scope = rememberCoroutineScope()
 
                 val currentSheet: MutableState<@Composable () -> Unit> =
@@ -577,7 +584,7 @@ class MainActivity : ComponentActivity() {
                     Button(
                         {
                             scope.launch {
-                                state.animateTo(BottomSheetValue.SHOWING)
+                                state.show()
                             }
 
                         },
@@ -600,7 +607,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                state.animateTo(BottomSheetValue.SHOWING)
+                                state.show()
                             }
 
                         },
@@ -626,7 +633,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                 }
 
-                                state.animateTo(BottomSheetValue.SHOWING)
+                                state.show()
                             }
 
                         },
@@ -644,15 +651,18 @@ class MainActivity : ComponentActivity() {
                         BottomSheet(
                             parentHeight = constraints.maxHeight,
                             topOffset = with(LocalDensity.current) { 56.toDp() },
-                            fillMaxHeight = true,
+                        //    fillMaxHeight = true,
                             sheetState = state,
-                            contentColor = Yellow,
+                            backgroundColor = Yellow,
+                            elevation = 16.dp
                         ) {
                             currentSheet.value()
                         }
                     }
 
                 }
+
+
 
 //todo --- what about listening for changes of currentSheet and whenever it changed, open the sheet?
 
