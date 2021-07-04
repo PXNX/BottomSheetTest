@@ -1,15 +1,12 @@
 buildscript {
-    ext {
-        compose_version = '1.0.0-beta01'
-    }
     repositories {
         jcenter()
         maven { url = "https://dl.bintray.com/kotlin/kotlin-eap" }
         google()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.0.0-alpha12'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.4.30"
+        classpath 'com.android.tools.build:gradle:7.1.0-alpha02'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.10"
     }
 }
 
